@@ -866,7 +866,7 @@ The ultimate goal of this system is not to automate teacher judgment, but to enh
 
 ## 👥 Contributors
 
-- **Omar Alethamat** – *AI Engineer*
+- **Omar Al ethamat** – *AI Engineer*
 
 Feel free to open issues or pull requests to contribute.
 
