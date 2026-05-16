@@ -37,7 +37,7 @@ This project presents a **multi-modal AI system** designed for **real-time stude
 - A **Smartwatch module** trained on the WESAD physiological dataset that classifies student stress levels from heart-rate features, achieving **91% accuracy**.
 - An **Academic Performance module** trained on the UCI Student Performance dataset that predicts academic risk levels from demographic and academic attributes, achieving **89% accuracy**.
 - A **Streamlit-based deployment platform** that provides live dashboards, historical session analytics, per-student profiling, and AI-generated weekly reports powered by the Mistral AI language model.
-- End-to-end **ground-truth validation** performed on controlled classroom scenarios, achieving **100% prediction accuracy** against manually defined expected outcomes.
+- End-to-end **ground-truth validation** performed on real classroom recordings at the university with 6 students, achieving an **overall framework accuracy of ≈82.33%** across the three pipeline stages, evaluated against a dedicated ground truth file.
 
 The system is designed to assist educators in identifying at-risk students early, understanding behavioral and physiological engagement patterns, and making data-informed pedagogical decisions — all from a single integrated interface.
 
@@ -64,7 +64,7 @@ This system answers that question by fusing three data modalities — visual beh
 
 ### Scope
 
-The system was validated in a controlled classroom simulation involving three students, three subjects (Mathematics, Arabic, English), and three days of recorded sessions — nine sessions in total — with a final live-demo session used for end-to-end ground-truth validation.
+The system was validated using real classroom videos recorded at the university, involving 6 students across multiple class sessions and subjects. Stage 1 comprises 30 historical session videos; Stage 2 comprises 1 final session video used for end-to-end ground-truth validation.
 
 ---
 
@@ -92,7 +92,7 @@ Training configuration:
 - **Learning rate:** 0.01
 - **Augmentation:** HSV jitter, translation, scaling, horizontal flip, mosaic (1.0), mixup (0.2)
 
-A separate **YOLOv8n** (nano) model handles person detection, sorting detected persons left-to-right to assign stable student identities (S1, S2, S3) within a shared classroom frame.
+A separate **YOLOv8n** (nano) model handles person detection, sorting detected persons left-to-right to assign stable student identities (S1, S2, ..., S6) within a shared classroom frame.
 
 #### MediaPipe Face Mesh — Head Pose Estimation
 
@@ -212,7 +212,7 @@ In the deployment context, the academic module ingests a structured CSV with the
 
 | Column | Type | Description |
 |:---|:---|:---|
-| `student_id` | String | Student identifier (S1, S2, S3) |
+| `student_id` | String | Student identifier (S1–S6) |
 | `subject` | String | Subject name (math, arabic, english) |
 | `homework_commitment` | Binary | 1 = homework submitted, 0 = not |
 | `month1_exam` | Integer | First monthly exam score (0–100) |
@@ -323,31 +323,9 @@ graduate_project/
     │   ├── hr_stress_xgb_model.pkl      ← Deployed stress classification model
     │   └── main.py                      ← Stress inference for new HR readings
     │
-    ├── perfor/                          ← Academic module (deployment copy)
-    │   ├── xgb_g3_model.pkl             ← Deployed academic risk prediction model
-    │   └── main.py                      ← Academic inference for new student data
-    │
-    └── data/                            ← Demo data for the controlled simulation
-        ├── historical_watch.csv         ← Watch data for 8 historical sessions (Days 1–3)
-        ├── academic_results.csv         ← Academic CSV for 3 students × 3 subjects
-        │
-        ├── day1/                        ← Day 1 session videos
-        │   ├── day1_math.mp4
-        │   ├── day1_arabic.mp4
-        │   └── day1_english.mp4
-        │
-        ├── day2/                        ← Day 2 session videos
-        │   ├── day2_math.mp4
-        │   ├── day2_arabic.mp4
-        │   └── day2_english.mp4
-        │
-        ├── day3/                        ← Day 3 session videos (partial — final session separate)
-        │   ├── day3_math.mp4
-        │   └── day3_arabic.mp4
-        │
-        └── test/                        ← Final session data (ground-truth validation)
-            ├── 3_english.mp4            ← Final session video (day3_english)
-            └── final_watch.csv          ← Watch data for the final session only
+    └── perfor/                          ← Academic module (deployment copy)
+        ├── xgb_g3_model.pkl             ← Deployed academic risk prediction model
+        └── main.py                      ← Academic inference for new student data
 ```
 
 ---
@@ -387,7 +365,7 @@ graduate_project/
 | `deployment/app.py` | Main Streamlit application. Implements the two-stage data upload flow, session state management, data validation, camera result processing, data fusion orchestration, and the three-tab dashboard UI (Live Classroom, Student Profile, Weekly AI Report). |
 | `deployment/utils.py` | Core utility module. Contains: `load_camera_models()` (lazy model loading with caching), `process_video()` (frame-by-frame YOLO + MediaPipe inference on session videos), `_get_head_pose()` and `_attention_from_pose()` (head orientation classification), `parse_session_filename()` (robust filename metadata extraction), `read_watch_csv()` and `read_academic_csv()` (CSV ingestion with column validation), `fuse_data()` (camera-watch merge with session_id and day+subject fallback), `get_interpreted_status()` (multi-signal status label generation), and `generate_mistral_report()` (Mistral AI API call for teacher report synthesis). |
 | `deployment/requirements.txt` | Pinned Python dependency list for the deployment environment. |
-| `deployment/README.md` | Deployment-specific documentation covering installation steps, demo flow, expected input file formats, project structure, and complete ground-truth validation tables. |
+| `deployment/README.md` | Deployment-specific documentation covering installation steps, demo flow, expected input file formats, and project structure. |
 | `deployment/app.zip` | Compressed archive of the deployment application for distribution. |
 
 ### Deployment — Camera Module
@@ -416,18 +394,6 @@ graduate_project/
 | `deployment/perfor/main.py` | Deployment inference script for the academic performance model. Loads the model package, one-hot encodes a new student record, aligns columns to the training schema, runs prediction, and outputs the predicted academic level. |
 | `deployment/perfor/xgb_g3_model.pkl` | Deployed copy of the trained academic risk prediction model artifact. |
 
-### Deployment — Demo Data
-
-| File / Folder | Description |
-|:---|:---|
-| `deployment/data/historical_watch.csv` | Pre-built smartwatch CSV for all 8 historical sessions (Days 1–3, subjects: math/arabic/english for Days 1–3 Arabic and Math). Contains `student_id, day, subject, session_id, stress_level, bpm` for S1, S2, S3. |
-| `deployment/data/academic_results.csv` | Pre-built academic CSV for 3 students × 3 subjects (9 rows). Contains exam scores, homework commitment, absence counts, and predicted academic level. |
-| `deployment/data/day1/` | Day 1 classroom session videos (math, arabic, english) — combined frames showing all three students. |
-| `deployment/data/day2/` | Day 2 classroom session videos (math, arabic, english). |
-| `deployment/data/day3/` | Day 3 partial session videos (math, arabic) — the english session is in the `test/` folder. |
-| `deployment/data/test/3_english.mp4` | The final session video (`day3_english`) used for Stage 2 live demo and ground-truth validation. |
-| `deployment/data/test/final_watch.csv` | Smartwatch data for the final session only (day3_english, all three students). |
-
 ---
 
 ## Model Performance
@@ -436,10 +402,10 @@ graduate_project/
 
 | Module | Metric | Result |
 |:---|:---:|:---:|
-| YOLO Behavior Detection (Camera) | mAP@50 | **77%** |
+| YOLO Behavior Detection (Camera) | Binary Accuracy | **67.60%** |
 | Smartwatch Stress Classification | Accuracy | **91%** |
 | Academic Performance Prediction | Accuracy | **89%** |
-| End-to-End Ground Truth Validation | Accuracy | **100%** |
+| End-to-End Ground Truth Validation | Overall Accuracy | **≈82.33%** |
 
 ### Individual Model Performance
 
@@ -447,9 +413,9 @@ The system consists of three main models, each handling a different part of the 
 
 | Model   | Type                  | Task                                | Accuracy | mAP@50 | mAP@50–95 | Precision | Recall | F1-score |
 |---------|-----------------------|-------------------------------------|----------|--------|-----------|-----------|--------|----------|
-| Model 1 | Detection (YOLO)      | Classroom behavior (camera input)   | —        | 76.3%  | 60.7%     | 74.7%     | 73.2%  | —        |
-| Model 2 | Classification        | Academic performance analysis       | 88.5%    | —      | —         | 0.88      | 0.89   | 0.88     |
-| Model 3 | Classification        | Stress detection (smartwatch data)  | 91.0%    | —      | —         | 0.91      | 0.91   | 0.90     |
+| Model 1 | Detection (YOLO)      | Classroom behavior (camera input)   | 67.60%   | —      | —         | 62.91%    | 97.94% | 76.61%   |
+| Model 2 | Classification        | Academic performance analysis       | 88.52%   | —      | —         | 0.88      | 0.89   | 0.88     |
+| Model 3 | Classification        | Stress detection (smartwatch data)  | 91.0%    | —      | —         | 0.91      | 0.91   | 0.91     |
 
 ---
 
@@ -457,79 +423,15 @@ The system consists of three main models, each handling a different part of the 
 
 ### Overview
 
-The system was validated end-to-end using a controlled classroom simulation. Three students — **Abdullah (S1)**, **Anas (S2)**, and **Omar (S3)** — each have a designated strongest subject in which they are expected to display high engagement, low stress, and strong academic outcomes. The validation protocol checks whether all three AI modules jointly produce results that are consistent with the pre-defined ground truth.
-
-| Student | ID | Strongest Subject |
-|:---|:---:|:---:|
-| Abdullah | S1 | English |
-| Anas | S2 | Arabic |
-| Omar | S3 | Math |
-
-### Behavioral Ground Truth (Camera)
-
-Each session video contains all three students in a single frame, arranged left-to-right (S1 / S2 / S3). The ground truth asserts that each student shows highest focus and engagement during their strongest subject.
-
-| Session | Day | Subject | Expected Focused Student | Expected Lower-Engagement Students |
-|:---|:---:|:---:|:---:|:---:|
-| day1_math | Day 1 | Math | Omar (S3) | Abdullah (S1), Anas (S2) |
-| day1_arabic | Day 1 | Arabic | Anas (S2) | Abdullah (S1), Omar (S3) |
-| day1_english | Day 1 | English | Abdullah (S1) | Anas (S2), Omar (S3) |
-| day2_math | Day 2 | Math | Omar (S3) | Abdullah (S1), Anas (S2) |
-| day2_arabic | Day 2 | Arabic | Anas (S2) | Abdullah (S1), Omar (S3) |
-| day2_english | Day 2 | English | Abdullah (S1) | Anas (S2), Omar (S3) |
-| day3_math | Day 3 | Math | Omar (S3) | Abdullah (S1), Anas (S2) |
-| day3_arabic | Day 3 | Arabic | Anas (S2) | Abdullah (S1), Omar (S3) |
-| day3_english | Day 3 | English | Abdullah (S1) | Anas (S2), Omar (S3) |
-
-### Stress Ground Truth (Smartwatch)
-
-Stress values are derived from simulated heart-rate data constructed to match expected physiological patterns. Sessions in a student's weak subject are associated with elevated BPM.
-
-| Session | Abdullah Stress | Abdullah BPM | Anas Stress | Anas BPM | Omar Stress | Omar BPM |
-|:---|:---:|---:|:---:|---:|:---:|---:|
-| day1_math | normal | 86 | normal | 82 | normal | 84 |
-| day1_arabic | normal | 85 | normal | 88 | normal | 83 |
-| day1_english | normal | 84 | normal | 81 | normal | 89 |
-| day2_math | high | 112 | high | 116 | normal | 87 |
-| day2_arabic | high | 110 | normal | 90 | normal | 84 |
-| day2_english | normal | 91 | high | 109 | normal | 82 |
-| day3_math | high | 115 | normal | 86 | normal | 88 |
-| day3_arabic | high | 111 | normal | 89 | high | 118 |
-| day3_english | normal | 88 | high | 110 | high | 112 |
-
-### Academic Ground Truth
-
-| Student | Name | Subject | Homework | Month 1 | Month 2 | Absences | Level | Expected Risk |
-|:---:|:---|:---:|:---:|---:|---:|---:|:---:|:---|
-| S1 | Abdullah | Math | Yes | 61 | 64 | 2 | 2 | Medium Academic Risk |
-| S1 | Abdullah | Arabic | No | 54 | 57 | 3 | 3 | High Academic Risk |
-| S1 | Abdullah | English | Yes | 90 | 94 | 1 | 1 | Low Academic Risk |
-| S2 | Anas | Math | No | 48 | 52 | 3 | 3 | High Academic Risk |
-| S2 | Anas | Arabic | Yes | 89 | 93 | 1 | 1 | Low Academic Risk |
-| S2 | Anas | English | Yes | 62 | 65 | 2 | 2 | Medium Academic Risk |
-| S3 | Omar | Math | Yes | 88 | 92 | 1 | 1 | Low Academic Risk |
-| S3 | Omar | Arabic | Yes | 66 | 68 | 1 | 2 | Medium Academic Risk |
-| S3 | Omar | English | No | 58 | 61 | 1 | 2 | Medium Academic Risk |
-
-### Final Session Validation (day3_english)
-
-The final live-demo session (`day3_english.mp4`) serves as the primary end-to-end validation point.
-
-| Student | Expected Focus | Expected Engagement | Expected Stress |
-|:---:|:---:|:---:|:---:|
-| Abdullah (S1) | High | Good | Normal |
-| Anas (S2) | Low | Low | High |
-| Omar (S3) | Low | Low | High |
-
-Abdullah's dominance in English is the key test: if the camera module correctly assigns him the highest focus score, the stress module correctly reads his BPM as normal, and the academic module correctly labels his English performance as Level 1 (Low Risk), the system is validated end-to-end. All three conditions were met, yielding the reported **100% accuracy** on this controlled scenario.
+The system was validated end-to-end using real classroom videos recorded at the university, with 6 students participating. All three AI modules were evaluated jointly to verify that their combined predictions are consistent with pre-defined expected outcomes per student and per session. The complete per-student, per-session ground truth labels used for evaluation are provided in [`ground_truth_correct_reformatted.xlsx`](ground_truth_correct_reformatted.xlsx).
 
 ### Validation Methodology
 
 1. **Define ground truth** — Expected behavioral, physiological, and academic outcomes are documented before running the system.
 2. **Run the full pipeline** — Upload all videos and CSVs through the Streamlit app to complete both Stage 1 and Stage 2 processing.
-3. **Compare outputs** — The Student Profile Dashboard and Live Classroom Dashboard outputs are compared against the ground truth tables above.
+3. **Compare outputs** — The Student Profile Dashboard and Live Classroom Dashboard outputs are compared against the ground truth file.
 4. **Generate and verify AI report** — The Mistral AI weekly report is generated and its per-student subject-level characterizations are verified against expected phrasing.
-5. **Result** — In all controlled test runs, the system's predictions matched the pre-defined ground truth for every student-session-module combination.
+5. **Result** — Across real classroom test runs, the system's combined predictions were evaluated against the pre-defined ground truth, yielding an overall framework accuracy of ≈82.33% across the three pipeline stages.
 
 ---
 
@@ -711,16 +613,16 @@ python test_model.py --mode video --source path/to/video.mp4
 #### Stage 1 — Process Historical Sessions
 
 1. Open the app with `streamlit run app.py`
-2. In the sidebar, enter student display names for S1, S2, S3 (optional)
-3. Upload the first **8 session videos** (day1_math, day1_arabic, day1_english, day2_math, day2_arabic, day2_english, day3_math, day3_arabic)
-4. Upload the **historical watch CSV** (`data/historical_watch.csv`)
+2. In the sidebar, enter student display names for S1–S6 (optional)
+3. Upload the **30 historical session videos**
+4. Upload the **historical watch CSV**
 5. Click **Process Historical Sessions** — the system processes each video with YOLO + MediaPipe inference and stores per-student, per-session results
 
 #### Stage 2 — Process Final Session and Academic Data
 
-6. Upload the **final session video** (`data/test/3_english.mp4`, renamed as `day3_english.mp4`)
-7. Upload the **final watch CSV** (`data/test/final_watch.csv`)
-8. Upload the **academic results CSV** (`data/academic_results.csv`)
+6. Upload the **final session video**
+7. Upload the **final watch CSV**
+8. Upload the **academic results CSV**
 9. Click **Process Final Session & Academic Data**
 
 #### Explore the Dashboard
@@ -732,7 +634,7 @@ python test_model.py --mode video --source path/to/video.mp4
 ### Video Format Requirements
 
 - Videos must be named using the pattern `dayX_subject.mp4` (e.g., `day1_math.mp4`)
-- Each video must show all three students in a single combined frame, arranged **left to right: S1 — S2 — S3**
+- Each video must show all 6 students in a single combined frame, arranged left to right
 - Supported formats: `.mp4`, `.avi`, `.mov`
 
 ### CSV Format Requirements
@@ -851,7 +753,7 @@ This project demonstrates that a multi-modal AI approach — combining computer 
 
 The three modules are complementary by design: the Camera module captures visible behavioral engagement, the Smartwatch module reveals physiological stress that has no visual manifestation, and the Academic Performance module provides the longitudinal outcome context that gives both other signals their pedagogical meaning. When fused together and presented through an AI-generated narrative, these signals equip teachers with the kind of per-student, per-subject insight that would otherwise require hours of manual observation and record review.
 
-The controlled ground-truth validation — achieving 100% end-to-end accuracy across all students and sessions — confirms that the system's combined predictions are internally consistent and correctly aligned with expected real-world behavioral patterns.
+The ground-truth validation — conducted using real classroom recordings at the university with 6 students, achieving an overall framework accuracy of ≈82.33% across the three pipeline stages — confirms that the system's combined predictions are meaningful and aligned with real-world behavioral patterns.
 
 Looking ahead, the architecture is designed for incremental extension:
 
