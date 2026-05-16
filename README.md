@@ -675,42 +675,38 @@ S1,english,1,90,94,1,1
 ## Example Outputs
 
 ### Main page
-Stage 1:
 
-<img width="1919" height="946" alt="image" src="https://github.com/user-attachments/assets/e7aecc44-330d-4e36-b29b-d003a1b70422" />
-
-Stage 2: 
-<img width="1919" height="949" alt="image" src="https://github.com/user-attachments/assets/b0107cdc-c57e-41c0-8ba0-fe689883bd0d" />
+<img width="1600" height="698" alt="1" src="https://github.com/user-attachments/assets/49571f8a-a45d-4a64-ad6c-abfca029ed02" />
 
 ---
 
 ### Live Classroom Dashboard
 
-<img width="1645" height="902" alt="image" src="https://github.com/user-attachments/assets/1f088dff-61d1-43fb-9958-4b289ebc94b1" />
+<img width="1600" height="704" alt="2" src="https://github.com/user-attachments/assets/be421592-6529-4587-81db-ac20cfe01367" />
 
 ---
 
 ### Student Profile — Behavioral Analytics Table
 
-<img width="1919" height="944" alt="image" src="https://github.com/user-attachments/assets/276cce11-3c0c-460c-b2c3-eaf5f7ec694c" />
+<img width="1600" height="693" alt="3" src="https://github.com/user-attachments/assets/5d21d95f-035c-4da5-8d17-38e55821dee6" />
 
 ---
 
 ### Student Profile — Combined Subject Summary
 
-<img width="1919" height="936" alt="image" src="https://github.com/user-attachments/assets/94335fbf-f071-4e19-9966-2a2b4a302cab" />
+<img width="1600" height="690" alt="4" src="https://github.com/user-attachments/assets/4c0343b9-54d9-4e1d-b698-7521fce69ae7" />
 
 ---
 
-### Weekly AI Report — Mistral Generated Summary
+### Weekly AI Report
 
 Data sent to LLM:
 
-<img width="1919" height="949" alt="image" src="https://github.com/user-attachments/assets/239608c8-c60b-4e5e-860a-efa2e0d8982b" />
+<img width="1600" height="688" alt="5" src="https://github.com/user-attachments/assets/666c8b1c-46d7-43ad-aca3-e27d3f4b3cea" />
 
 The generated report:
 
-<img width="1080" height="952" alt="image" src="https://github.com/user-attachments/assets/7e4220d2-3ef9-42b4-9966-a17ab4079e59" />
+<img width="1600" height="696" alt="6" src="https://github.com/user-attachments/assets/4e6aa408-b463-47e4-a44f-a3a4363b48fb" />
 
 ---
 
